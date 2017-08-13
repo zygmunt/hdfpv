@@ -1,9 +1,3 @@
 [submodule "EZ-WifiBroadcast"]
 	path = EZ-WifiBroadcast
-	url = /home/zygmunt/Develop/EZ-WifiBroadcast.git
-[submodule "raspi2png"]
-	path = raspi2png
-	url = /home/zygmunt/Develop/raspi2png.git
-[submodule "openvgadapt"]
-	path = openvgadapt
-	url = /home/zygmunt/Develop/openvgadapt.git
+	url = https://github.com/zygmunt/EZ-WifiBroadcast.git
