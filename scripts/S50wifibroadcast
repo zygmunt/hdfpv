@@ -1,0 +1,25 @@
+#!/bin/bash
+# tx script
+
+# Make sure only root can run our script
+if [[ $EUID -ne 0 ]]; then
+    echo "This script must be run as root" 1>&2
+    exit 1
+fi
+
+if [ ! -d /boot ]; then
+    mkdir /boot
+fi
+
+if [ ! -f /boot/config.txt ]; then
+    mount /dev/mmcblk0p1 /boot
+fi
+
+source /opt/hdfpv/hdfpv_settings.sh
+source /opt/hdfpv/hdfpv_functions.sh
+
+if [ "$CAM" == "0" ]; then
+    rx_function
+else
+    tx_function
+fi

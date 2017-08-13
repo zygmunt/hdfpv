@@ -1,0 +1,172 @@
+#!/bin/bash
+#
+# Common settings (need to be kept in sync for both TX and RX!)
+# ============================================================
+#
+# Desired frequency in MHz
+FREQ=2472
+#
+# Set to "Y" on the RX for auto-scanning. Frequency still has to be set on TX!
+# Feature might be buggy or not work at all!
+FREQSCAN=N
+#
+# the following frequencies are supported:
+# 2412, 2417, 2422, 2427, 2432, 2437, 2442, 2447, 2452, 2457, 2462, 2467, 2472, 2484 (Ralink and Atheros)
+# 2312, 2317, 2322, 2327, 2332, 2337, 2342, 2347, 2352, 2357, 2362, 2367, 2372, 2377, 2382, 2387, 2392, 2397, 2402, 2407 (Atheros only)
+# 2477, 2482, 2487, 2489, 2492, 2494, 2497, 2499, 2512, 2532, 2572, 2592, 2612, 2632, 2652, 2672, 2692, 2712 (Atheros only)
+#
+# 5180, 5200, 5220, 5240, 5260, 5280, 5300, 5320
+# 5500, 5520, 5540, 5560, 5580, 5600, 5620, 5640, 5660, 5680, 5700
+# 5745, 5765, 5785, 5805, 5825
+#
+# (2.3Ghz and 2.5-2.7Ghz band only works with Atheros cards. Check your local regulations before transmitting!)
+#
+#
+#
+# Set this to "single" for single TX wifi card, for dual TX wifi cards set "dual".
+# MAC addresses and frequency for the RX and TX wifi need to be set here when dual TX mode is enabled.
+#
+TXMODE=single
+#
+MAC_RX[0]=112233445566
+FREQ_RX[0]=2472
+#
+MAC_RX[1]=112233445566
+FREQ_RX[1]=2472
+#
+MAC_RX[2]=112233445566
+FREQ_RX[2]=5745
+#
+MAC_RX[3]=112233445566
+FREQ_RX[3]=5745
+#
+#
+MAC_TX[0]=112233445566
+FREQ_TX[0]=5745
+#
+MAC_TX[1]=112233445566
+FREQ_TX[1]=2472
+#
+#
+#
+# Enable CTS protection (use in areas with other wifi networks)
+CTS_PROTECTION=N
+#
+#
+# Video bitrate. Lower settings yield higher range and vice versa.
+# 1=2.5Mbit, 2=4.5Mbit, 3=6Mbit, 4=8.5Mbit, 5=11.5Mbit
+BITRATE=3
+#
+#
+# Choose between 30, 48, 59.9
+FPS=30
+#
+#
+# FEC SETTINGS
+VIDEO_BLOCKS=8
+VIDEO_FECS=4
+VIDEO_BLOCKLENGTH=1024
+#
+#
+# Telemetry transmission method:
+# wbc = use wifibroadcast as telemetry up/downlink
+# external = use external means as telemetry up/downlink (LRS or 3DR dongles)
+# if set to external, set serialport to which LRS or 3DR dongle is connected
+# both on ground and air pi
+TELEMETRY_TRANSMISSION=wbc
+#
+#
+#
+#
+# Set to "disabled" or "mavlink" for Mavlink (Tower App, Missionplanner, etc.)
+TELEMETRY_UPLINK=disabled
+#
+#
+#
+# Set this to "Y" to enable R/C over wifibroadcast.
+# See joyconfig.txt for other settings, default settings work for Taranis in USB Joystick mode
+ENABLE_RC=N
+#
+#
+# TX settings
+# ============================================================
+#
+# Camera image settings
+# V1 cam: 1280x720: 30fps, 48fps. 1920x1080: 30fps
+# V2 cam: 1280x720: 30fps, 48fps, 59.9fps. 1640x922: 30fps, 40fps. 1920x1080: 30fps
+WIDTH=1280
+HEIGHT=720
+#
+# Lower values mean faster glitch-recovery, but also lower video quality.
+# With fps=48 and keyframerate=5, glitches will stay visible for around 100ms in worst case.
+# You can set this higher or lower according to your needs. Minimum value is 2.
+KEYFRAMERATE=5
+#
+# Set additional raspivid parameters here
+EXTRAPARAMS="-cd H264 -n -fl -ih -pf high -ex sports -mm matrix -awb horizon"
+#
+#
+# Serial port and baudrate (19200 is minimum) to use for the R/C connection between air Pi and flight control
+# Set this to "/dev/serial0" for Pi onboard serial port or  "/dev/ttyUSB0" for USB-to-serial adapter
+FC_RC_SERIALPORT=/dev/serial0
+FC_RC_BAUDRATE=19200
+#
+# Serial port and baudrate to use for the telemetry connection between air Pi and flight control
+# Set this to "/dev/serial0" for Pi onboard serial port or  "/dev/ttyUSB0" for USB-to-serial adapter
+FC_TELEMETRY_SERIALPORT=/dev/serial0
+FC_TELEMETRY_BAUDRATE=57600
+#
+#
+#
+# RX settings
+# ============================================================
+#
+# set this to "Y" to enable Wifi Hotspot. Default SSID is "EZ-Wifibroadcast", password is "wifibroadcast".
+# See apconfig.txt for configuration. This will forward the received video and telemetry streams to an
+# android device or computer connected to the RX Pi via WiFi.
+WIFI_HOTSPOT=N
+#
+# Set to "internal" to use the interal Pi3 wifi chip or the MAC address of the USB card you want to use
+WIFI_HOTSPOT_NIC=internal
+#
+# set this to "Y" to enable Ethernet hotspot. This will forward the received video and telemetry streams
+# to another computer or other device connected to the Raspberry via Ethernet
+ETHERNET_HOTSPOT=N
+#
+# Set to "Y" to enable periodic screenshots every 10 seconds
+ENABLE_SCREENSHOTS=N
+#
+# Set to "memory" to use RAMdisk for temporary video/screenshot/telemetry storage. This limits recording time
+# to ~12-14 minutes, but is the safe way. If you need longer recording times, use "sdcard", to use the sdcard
+# as the temporary video storage. Keep in mind though, that this might introduce video stutter and/or bad blocks,
+# SO TEST CAREFULLY BEFORE USING!
+VIDEO_TMP=memory
+#
+#
+# set this to "Y" to enable wifibroadcast relay mode. This will forward the received video and telemetry streams
+# to another wifibroadcast RX. Note! Currently, the RSSI display you see on the RX behind the relay is not the RSSI
+# between aircraft and ground, but between relay and rx on the ground!
+RELAY=N
+RELAY_NIC=112233445566
+RELAY_FREQ=5220
+#
+# Set this to "Y" to disable text messages about Display and Wifi card setup etc.
+QUIET=N
+#
+#
+# serial port settings if using TELEMETRY_TRANSMISSION=external
+EXTERNAL_TELEMETRY_SERIALPORT_GROUND=/dev/ttyUSB0
+EXTERNAL_TELEMETRY_SERIALPORT_GROUND_BAUDRATE=57600
+#
+#
+#
+# set to "Y" to enable output of telemetry to serialport on ground Pi (for antenna tracker etc.)
+ENABLE_SERIAL_TELEMETRY_OUTPUT=Y
+# baudrate and serialport used for ground Pi telemetry output
+TELEMETRY_OUTPUT_SERIALPORT_GROUND=/dev/serial0
+TELEMETRY_OUTPUT_SERIALPORT_GROUND_BAUDRATE=57600
+#
+#
+# Set this to "raw" to forward a raw h264 stream to 2nd display devices (for FPV_VR app)
+# Set to "rtp" to forward RTP h264 stream (for Tower app and gstreamer etc.)
+FORWARD_STREAM=rtp

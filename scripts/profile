@@ -1,0 +1,269 @@
+#!/bin/bash
+# This file originaly comes from: EZ-Wifibroadcast-1.5
+# Modified by https://github.com/zygmunt
+# Here is only profile setup
+
+TTY=`tty`
+
+if [ "$CAM" == "0" ]; then
+    # if local TTY, set font according to display resolution
+    if [ "$TTY" = "/dev/tty1" ] || [ "$TTY" = "/dev/tty2" ] || [ "$TTY" = "/dev/tty3" ] || [ "$TTY" = "/dev/tty4" ] || [ "$TTY" = "/dev/tty5" ] || [ "$TTY" = "/dev/tty6" ] || [ "$TTY" = "/dev/tty7" ] || [ "$TTY" = "/dev/tty8" ] || [ "$TTY" = "/dev/tty9" ] || [ "$TTY" = "/dev/tty10" ] || [ "$TTY" = "/dev/tty11" ] || [ "$TTY" = "/dev/tty12" ]; then
+    H_RES=`tvservice -s | cut -f 2 -d "," | cut -f 2 -d " " | cut -f 1 -d "x"`
+    if [ "$H_RES" -ge "1680" ]; then
+            setfont /usr/share/consolefonts/Lat15-TerminusBold24x12.psf.gz
+    else
+        if [ "$H_RES" -ge "1280" ]; then
+            setfont /usr/share/consolefonts/Lat15-TerminusBold20x10.psf.gz
+        else
+            if [ "$H_RES" -ge "800" ]; then
+                setfont /usr/share/consolefonts/Lat15-TerminusBold14.psf.gz
+            fi
+        fi
+    fi
+    fi
+fi
+
+# if running bash
+if [ -n "$BASH_VERSION" ]; then
+    # include .bashrc if it exists
+    if [ -f "$HOME/.bashrc" ]; then
+    . "$HOME/.bashrc"
+    fi
+fi
+
+source /opt/hdfpv/ezwbc_functions.sh
+source /opt/hdfpv/ezwbc_settings.sh
+
+printf "\033c"
+
+case $TTY in
+    /dev/tty1) # video stuff and general stuff like wifi card setup etc.
+    printf "\033[12;0H"
+    echo
+    tmessage "Display: `tvservice -s | cut -f 3-20 -d " "`"
+    echo
+    if [ "$CAM" == "0" ]; then
+        rx_function
+    else
+        tx_function
+    fi
+    ;;
+    /dev/tty2) # osd stuff
+    echo "================== OSD (tty2) ==========================="
+    # only run osdrx if no cam found
+    if [ "$CAM" == "0" ]; then
+        osdrx_function
+    else
+        # only run osdtx if cam found, osd enabled and telemetry input is the tx
+        if [ "$CAM" == "1" ] && [ "$TELEMETRY_TRANSMISSION" == "wbc" ]; then
+            osdtx_function
+        fi
+    fi
+        echo "OSD not enabled in configfile"
+    sleep 365d
+    ;;
+    /dev/tty3) # r/c stuff
+    echo "================== R/C (tty3) ==========================="
+    # only run rcrx if cam found and enabled_rc is Y
+    if [ "$CAM" == "1" ] && [ "$ENABLE_RC" == "Y" ]; then
+        echo "R/C enabled ... we are RX"
+        rcrx_function
+    else
+        # only run rctx if no cam found and enable_rc is Y
+        if [ "$CAM" == "0" ] && [ "$ENABLE_RC" == "Y" ]; then
+        echo "R/C enabled ... we are TX"
+            rctx_function
+        fi
+    fi
+    echo "R/C not enabled in configfile"
+    sleep 365d
+    ;;
+    /dev/tty4) # unused
+    echo "================== UNUSED (tty4) ==========================="
+    sleep 365d
+    ;;
+    /dev/tty5) # screenshot stuff
+    echo "================== SCREENSHOT (tty5) ==========================="
+    echo
+    # only run screenshot function if cam found and screenshots are enabled
+    if [ "$CAM" == "0" ] && [ "$ENABLE_SCREENSHOTS" == "Y" ]; then
+        echo "Waiting some time until everything else is running ..."
+        sleep 20
+        echo "Screenshots enabled - starting screenshot function ..."
+        screenshot_function
+    fi
+    echo "Screenshots not enabled in configfile or we are TX"
+    sleep 365d
+    ;;
+    /dev/tty6)
+    echo "================== SAVE FUNCTION (tty6) ==========================="
+    echo
+    # # only run save function if we are RX
+    if [ "$CAM" == "0" ]; then
+        echo "Waiting some time until everything else is running ..."
+        sleep 30
+        echo "Waiting for USB stick to be plugged in ..."
+        while true; do
+        if [ ! -f "/tmp/donotsave" ]; then
+            if [ -e "/dev/sda" ]; then
+            echo "USB Memory stick detected"
+            save_function
+            fi
+        fi
+        sleep 1
+        done
+    fi
+    echo "Save function not enabled, we are TX"
+    sleep 365d
+    ;;
+    /dev/tty7) # check tether
+    echo "================== CHECK TETHER (tty7) ==========================="
+    if [ "$CAM" == "0" ]; then
+        echo "Waiting some time until everything else is running ..."
+        sleep 6
+        tether_check_function
+    else
+        echo "Cam found, we are TX, Check tether function disabled"
+        sleep 365d
+    fi
+    ;;
+    /dev/tty8) # check hotspot
+    echo "================== CHECK HOTSPOT (tty8) ==========================="
+    if [ "$CAM" == "0" ]; then
+        if [ "$ETHERNET_HOTSPOT" == "Y" ] || [ "$WIFI_HOTSPOT" == "Y" ]; then
+        echo
+        echo -n "Waiting until video is running ..."
+        HVIDEORXRUNNING=0
+        while [ $HVIDEORXRUNNING -ne 1 ]; do
+            sleep 0.1
+            HVIDEORXRUNNING=`pidof $DISPLAY_PROGRAM | wc -w`
+            echo -n "."
+        done
+        echo
+        echo "Video running, starting hotspot processes ..."
+        sleep 1
+        hotspot_check_function
+        else
+        echo "Check hotspot function not enabled in config file"
+        sleep 365d
+        fi
+    fi
+    ;;
+    /dev/tty9) # check alive
+    echo "================== CHECK ALIVE (tty9) ==========================="
+#    sleep 365d
+
+    if [ "$CAM" == "0" ]; then
+        echo "Waiting some time until everything else is running ..."
+        sleep 15
+        check_alive_function
+        echo
+    else
+        echo "Cam found, we are TX, check alive function disabled"
+        sleep 365d
+    fi
+    ;;
+    /dev/tty10) # uplink
+    echo "================== uplink / msp (tty10) ==========================="
+    sleep 7
+    if [ "$CAM" == "1" ]; then # we are video TX and uplink RX
+        if [ "$TELEMETRY_UPLINK" != "disabled" ]; then
+        echo "Uplink enabled ... we are uplink RX"
+        uplinkrx_function &
+        if [ "$TELEMETRY_UPLINK" == "msp" ]; then
+            mspdownlinktx_function
+        fi
+        sleep 365d
+        else
+        echo "uplink not enabled in config"
+        fi
+        sleep 365d
+    else # we are video RX and uplink TX
+        if [ "$TELEMETRY_UPLINK" != "disabled" ]; then
+        echo "uplink enabled ... we are uplink TX"
+        uplinktx_function &
+        if [ "$TELEMETRY_UPLINK" == "msp" ]; then
+            mspdownlinkrx_function
+        fi
+        sleep 365d
+        else
+        echo "uplink not enabled in config"
+        fi
+        sleep 365d
+    fi
+    ;;
+    /dev/tty11) # tty for dhcp and login
+    echo "================== eth0 DHCP client (tty11) ==========================="
+    # sleep until everything else is loaded (atheros cards and usb flakyness ...)
+    sleep 5
+    if [ "$CAM" == "0" ]; then
+        EZHOSTNAME="wifibrdcast-rx"
+    else
+        EZHOSTNAME="wifibrdcast-tx"
+    fi
+    # only configure ethernet network interface via DHCP if ethernet hotspot is disabled
+    if [ "$ETHERNET_HOTSPOT" == "N" ]; then
+        # disabled loop, as usual, everything is flaky on the Pi, gives kernel stall messages ...
+        nice ifconfig eth0 up
+        sleep 2
+            if cat /sys/class/net/eth0/carrier | nice grep -q 1; then
+            echo "Ethernet connection detected"
+            CARRIER=1
+            if nice pump -i eth0 --no-ntp -h $EZHOSTNAME; then
+                ETHCLIENTIP=`ifconfig eth0 | grep "inet addr" | cut -d ':' -f 2 | cut -d ' ' -f 1`
+                # kill and pause OSD so we can safeley start wbc_status
+                ps -ef | nice grep "osd" | nice grep -v grep | awk '{print $2}' | xargs kill -9
+                ps -ef | nice grep "cat /root/telemetryfifo1" | nice grep -v grep | awk '{print $2}' | xargs kill -9
+                killall wbc_status > /dev/null 2>&1
+                nice /root/wifibroadcast_status/wbc_status "Ethernet connected. IP: $ETHCLIENTIP" 7 55 0
+                OSDRUNNING=`pidof /tmp/osd | wc -w`
+                if [ $OSDRUNNING  -ge 1 ]; then
+                echo "OSD already running!"
+                else
+                killall wbc_status > /dev/null 2>&1
+                if [ "$CAM" == "0" ]; then # only (re-)start OSD if we are RX
+                    cat /root/telemetryfifo1 | /tmp/osd >> /wbc_tmp/telemetrytmp.txt &
+                fi
+                fi
+            else
+                ps -ef | nice grep "pump -i eth0" | nice grep -v grep | awk '{print $2}' | xargs kill -9
+                nice ifconfig eth0 down
+                echo "DHCP failed"
+                ps -ef | nice grep "osd" | nice grep -v grep | awk '{print $2}' | xargs kill -9
+                ps -ef | nice grep "cat /root/telemetryfifo1" | nice grep -v grep | awk '{print $2}' | xargs kill -9
+                killall wbc_status > /dev/null 2>&1
+                nice /root/wifibroadcast_status/wbc_status "ERROR: Could not acquire IP via DHCP!" 7 55 0
+                OSDRUNNING=`pidof /tmp/osd | wc -w`
+                if [ $OSDRUNNING  -ge 1 ]; then
+                echo "OSD already running!"
+                else
+                killall wbc_status > /dev/null 2>&1
+                if [ "$CAM" == "0" ]; then # only (re-)start OSD if we are RX
+                    cat /root/telemetryfifo1 | /tmp/osd >> /wbc_tmp/telemetrytmp.txt &
+                fi
+                fi
+            fi
+            else
+            echo "No ethernet connection detected"
+            fi
+    else
+        echo "Ethernet Hotspot enabled, doing nothing"
+    fi
+    sleep 365d
+    ;;
+    /dev/tty12) # tty for local interactive login
+    echo
+    if [ "$CAM" == "0" ]; then
+        echo "Welcome to EZ-Wifibroadcast 1.5 (RX) - type 'rw' to make filesystems writeable"
+    else
+        echo "Welcome to EZ-Wifibroadcast 1.5 (TX) - type 'rw' to make filesystems writeable"
+    fi
+    ;;
+    *) # all other ttys used for interactive login
+    if [ "$CAM" == "0" ]; then
+        echo "Welcome to EZ-Wifibroadcast 1.5 (RX) - type 'rw' to make filesystems writeable"
+    else
+        echo "Welcome to EZ-Wifibroadcast 1.5 (TX) - type 'rw' to make filesystems writeable"
+    fi
+    ;;
+esac
