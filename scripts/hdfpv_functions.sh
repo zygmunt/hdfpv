@@ -16,6 +16,7 @@ function tmessage {
 
 function load_modules {
     modprobe ath9k_htc
+    sleep 3
 }
 
 function create_fifo_files {
