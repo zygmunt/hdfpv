@@ -14,6 +14,20 @@ function tmessage {
     fi
 }
 
+function load_modules {
+    modprobe ath9k_htc
+}
+
+function create_fifo_files {
+    for fifo in ${HDFPV_FIFO_FILES[@]}; do
+        if [ -p ${fifo} ]; then
+            continue
+        elif [ -e ${fifo} ]; then
+            rm ${fifo}
+        fi
+        mkfifo ${fifo}
+    done
+}
 
 function collect_debug {
     ERR_LOG="/boot/errorlog.txt"

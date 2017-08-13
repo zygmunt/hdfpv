@@ -18,6 +18,9 @@ fi
 source /opt/hdfpv/hdfpv_settings.sh
 source /opt/hdfpv/hdfpv_functions.sh
 
+load_modules
+create_fifo_files
+
 if [ "$CAM" == "0" ]; then
     rx_function
 else
